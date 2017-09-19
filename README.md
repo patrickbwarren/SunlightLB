@@ -4,12 +4,13 @@ SunlightLB is an open-source 3D lattice Boltzmann code which can be
 used to solve a variety of hydrodynamics problems, including some
 passive scalar transport problems. Features include: 
 
-* scriptable C-based library architecture
-* based on D3Q19 lattice
-* twin-relaxation-time (stress relaxation) scheme
-* moving objects
-* link bounce-back boundary conditions
-* zero and non-zero Reynolds number flows
+* C-based code ;
+* scriptable ;
+* D3Q19 lattice ;
+* twin-relaxation-time (stress relaxation) scheme ;
+* moving objects ;
+* link-bounce-back boundary conditions ;
+* zero and non-zero Reynolds number flows.
 
 SunlightLB is implemented as a library of C functions.  Scripting
 language support is enabled by a [SWIG](http://www.swig.org/)
