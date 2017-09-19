@@ -1,0 +1,260 @@
+#!/usr/bin/wish
+
+# This file is part of SunlightLB - a 3D Lattice Boltzmann code
+# Copyright (C) 2005 Unilever UK Central Resources Ltd.
+
+# SunlightLB is free software; you can redistribute it and/or 
+# modify it under the terms of the GNU General Public License 
+# as published by the Free Software Foundation; either version 2 
+# of the License, or (at your option) any later version. 
+
+# SunlightLB is distributed in the hope that it will be useful, 
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details. 
+
+# You should have received a copy of the GNU General Public License 
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+
+# Default colours.
+
+set scol darkblue
+set fcol black
+set rcol darkgreen
+set dcol darkred
+
+# Default format and fonts
+
+set dform " %12s : %8s : %6s (%6s) : %8s  "
+set dfont -adobe-courier-bold-r-*-*-*-120-*-*-*-*-*-*
+set bfont -adobe-helvetica-bold-r-*-*-*-120-*-*-*-*-*-*
+
+# These are the general global variables.
+
+set globals {scol fcol dcol rcol current mflist dform dfont bfont}
+
+
+# CheckExists -- return > 0 if process of given pid exists,
+# return 0 if it doesn't exist.
+
+proc CheckExists {psid} {
+  return [string length [exec ps -e | gawk /$psid/]]
+}
+
+
+# SetCurrent -- sets name of the current monfile
+# to the root of the file name.
+
+proc SetCurrent {monfile} {
+  global globals
+  eval global $globals
+  regsub {\.mon$} $monfile {} name
+  set current(name) $name
+}
+
+
+# Probe -- probe the status of the current monfile
+# determined by name, and set all variables (except name).
+# Also do a check that the process is still running.
+
+proc Probe {} {
+  global globals
+  eval global $globals
+  set monvals [split [exec head -1 $current(name).mon]]
+  set current(dpdpid) [lindex $monvals 0]
+  set current(status) [lindex $monvals 1]
+  set current(elapse) [lindex $monvals 2]
+  set current(rate)   [lindex $monvals 3]
+  set current(krate)  [lindex $monvals 4]
+  if {[CheckExists $current(dpdpid)] == 0 \
+      && [string match fin* $current(status)] == 0} {
+    set current(status) "defunct"
+  }
+}
+
+
+# Update -- send a signal to update the current monfile,
+# note that the status is not updated, should follow with
+# a Probe to see this.
+
+proc Update {} {
+  global globals
+  eval global $globals
+  Probe
+  if {$current(status) == "finished" \
+      || $current(status) == "defunct" } return
+  set monfile $current(name).mon
+  set orgmtime [file mtime $monfile]
+  exec kill -USR1 $current(dpdpid)
+  after 500
+  set newmtime [file mtime $monfile]
+  while {$newmtime == $orgmtime} {
+    after 500
+    set newmtime [file mtime $monfile]
+  }
+}
+
+
+# GetList -- get list of monfiles in current directory.
+
+proc GetList {} {
+  global globals
+  eval global $globals
+  set mflist [glob *.mon]
+}
+
+
+# WinSetDescr -- update the status of the i'th monfile
+# in the monfile list in its window.
+
+proc WinSetDescr {i} {
+  global globals
+  eval global $globals
+  set filename [lindex $mflist $i]
+  SetCurrent $filename
+  Probe
+  set descr [format $dform $current(name) $current(elapse) \
+             $current(rate) $current(krate) $current(status)]
+  .mon$i.l config -text $descr
+  switch $current(status) {
+    "started"  { .mon$i.l config -fg $scol }
+    "finished" { .mon$i.l config -fg $fcol }
+    "running"  { .mon$i.l config -fg $rcol }
+    "defunct"  { .mon$i.l config -fg $dcol }
+  }
+}
+
+
+# WinKill -- kill the process corresponding to
+# the i'th monfile and wait to update its status.
+
+proc WinKill {i} {
+  global globals
+  eval global $globals
+  set filename [lindex $mflist $i]
+  SetCurrent $filename
+  Probe
+  if {[CheckExists $current(dpdpid)] == 0 } {
+    return
+  }
+  exec kill $current(dpdpid)
+  while {[CheckExists $current(dpdpid)]} {
+    after 500
+  }
+  WinSetDescr $i
+}
+
+
+# WinDump -- send a signal to the process corresponding to
+# the i'th monfile to dump a simulation snapshot.
+
+proc WinDump {i} {
+  global globals
+  eval global $globals
+  set filename [lindex $mflist $i]
+  SetCurrent $filename
+  Probe
+  if {[CheckExists $current(dpdpid)] == 0 } {
+    return
+  }
+  exec kill -USR2 $current(dpdpid)
+}
+
+
+# WinUpdate -- update the status of the i'th monfile
+# and corresponding window.
+
+proc WinUpdate {i} {
+  global globals
+  eval global $globals
+  set filename [lindex $mflist $i]
+  SetCurrent $filename
+  Update
+  WinSetDescr $i
+}
+
+
+# WinUpdateAll -- update the status of all the monfiles
+# and corresponding window.
+
+proc WinUpdateAll {} {
+  global globals
+  eval global $globals
+  set lmfl [llength $mflist]
+  for {set i 0} {$i < $lmfl} {incr i} {
+    WinUpdate $i
+  }
+}
+
+
+# Main -- main procedure that sets everything up
+
+proc Main {} {
+  GetList
+  wm title . "SunlightLB Progress Monitor"
+  wm iconname . "SunlightLB"
+  WinInit
+}
+
+
+# FrameInit -- initialise and pack frames for the windows.
+
+proc FrameInit {} {
+  global globals
+  eval global $globals
+  set lmfl [llength $mflist]
+  for {set i 0} {$i < $lmfl} {incr i} {
+    frame .mon$i -borderwidth 2 -relief groove
+    label .mon$i.l -justify left -font $dfont -anchor w
+    WinSetDescr $i
+    pack .mon$i.l -side left
+    button .mon$i.k -text "Kill" -font $bfont -command "WinKill $i"
+    pack .mon$i.k -side right -padx 2
+    button .mon$i.d -text "Dump" -font $bfont -command "WinDump $i"
+    pack .mon$i.d -side right -padx 2
+    button .mon$i.u -text "Update" -font $bfont -command "WinUpdate $i"
+    pack .mon$i.u -side right -padx 2
+    pack .mon$i -side top -fill x
+  }
+}
+
+# Reload -- remove all previous frames and reconstruct.
+
+proc Reload {} {
+  global globals
+  eval global $globals
+  set lmfl [llength $mflist]
+  for {set i 0} {$i < $lmfl} {incr i} {
+    destroy .mon$i
+  }
+  GetList  
+  FrameInit
+}
+
+
+# WinInit -- initialise the main window.
+
+proc WinInit {} {
+  global globals
+  eval global $globals
+  frame .top -borderwidth 2
+  set descr [format $dform "Name" "Elapsed" \
+             "Rate" "krate" "Status"]
+  label .top.l -text $descr -font $dfont \
+               -justify left -anchor w
+  pack .top.l -side left
+  button .top.quit -text Quit -font $bfont -command exit
+  pack .top.quit -side right -padx 2
+  button .top.reload -text Reload -font $bfont -command Reload
+  pack .top.reload -side right -padx 2
+  button .top.update -text "Update All" -font $bfont -command WinUpdateAll
+  pack .top.update -side right -padx 2
+  pack .top -side top -fill x
+  FrameInit
+}
+
+
+# Run main procedure
+
+Main
