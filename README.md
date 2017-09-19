@@ -2,9 +2,7 @@
 
 SunlightLB is an open-source 3D lattice Boltzmann code which can be
 used to solve a variety of hydrodynamics problems, including some
-passive scalar transport problems.
-
-#### Features
+passive scalar transport problems. Features include: 
 
 * scriptable C-based library architecture
 * based on D3Q19 lattice
@@ -28,21 +26,21 @@ on. Both zero Reynolds number flows, and non-zero Reynolds number
 flows, can be solved.  In addition, passive scalar transport is
 implemented on top of the lattice Boltzmann scheme via a
 tagged-particle propagation algorithm, with a variety of boundary
-conditions [4, 5]. This allows simulation of a variety of
+conditions. This allows simulation of a variety of
 reaction-advection-diffusion problems, such as a passive scalar
 adsorbing in a porous material in the presence of a flow (deep-bed
 filtration).  The algorithms underlying SunlightLB are published in
-the following literature (see [5] for a condensed summary of the
-algorithms) :
+the following literature :
 
 [1] Qian, d'Humieres and Lallemand, Europhys. Lett. **17**, 479
 (1992).
 
 [2] Ladd, [J. Fluid Mech. **271**, 285 (1994)](https://doi.org/10.1017/S0022112094001771);
 [J. Fluid Mech. **271**, 311 (1994)](https://doi.org/10.1017/S0022112094001783). 
+
 [3] Behrend, Harris and Warren, [Phys. Rev. E **50**, 4586 (1994)](https://doi.org/10.1103/PhysRevE.50.4586).
 
-#### Installation Notes
+### Installation Notes
 
 These notes are in the process of being updated!
 
@@ -87,7 +85,7 @@ If you don't want to work with a shared object library, the source
 code can be copied into the same directory as the driver code and all
 compiled together.
 
-To build and install SunlightLB as a perl extension module.
+#### To build and install SunlightLB as a perl extension module.
 
 Firstly, build and install the shared object library as before.
 
@@ -97,7 +95,7 @@ Firstly, build and install the shared object library as before.
 * Type `make install4perl` to install the perl module files.
 * Typing `perl sphere.pl` in the `examples` directory runs the code. 
 
-To build and install SunlightLB as a python module.
+#### To build and install SunlightLB as a python module.
 
 This is very similar to building a perl module.
 
@@ -107,7 +105,7 @@ This is very similar to building a perl module.
 * Type `make install4python` to install the python module files.
 * Typing `python2.2 sphere.py` in the `examples` directory runs the code. 
 
-Monitor utility
+#### Monitor utility
 
 The Tcl/Tk script `lbmonitor` has been included in the `src`
 directory.  This provides a GUI to monitor and check-point lattice
@@ -117,7 +115,7 @@ will be run, and run it with `wish lbmonitor`. Alternatively, find out
 where the Tcl/Tk `wish` command is and edit the first line of
 `lbmonitor`, then put it somewhere that will be found on the path.
 
-#### Copying
+### Copying
 
 SunlightLB is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -133,14 +131,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see
 <http://www.gnu.org/licenses/>.
 
-#### Copyright
+### Copyright
 
 SunlightLB is based on an original code copyright &copy; 2005-2017
 Unilever UK Central Resources Ltd (Registered in London number 29140;
 Registered Office: Unilever House, 100 Victoria Embankment, London
 EC4Y 0DY, UK).
 
-#### Contact
+### Contact
 
 Send email to patrick{dot}warren{at}unilever{dot}com
 
